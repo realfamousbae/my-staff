@@ -1,0 +1,14 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1280" height="360" viewBox="0 0 1280 360" role="img" aria-labelledby="title desc">
+<title id="title">My Staff</title><desc id="desc">Your collection, one photo at a time. Energy cans and Pringles tubes. An Android-first prototype.</desc>
+<rect width="1280" height="360" rx="28" fill="#10150f"/>
+<path d="M850 0V360M1010 0V360M1170 0V360M810 100H1280M810 260H1280" stroke="#242e21"/>
+<circle cx="1090" cy="172" r="140" fill="#1c2816"/>
+<rect x="955" y="83" width="87" height="210" rx="15" fill="#d7ff70" transform="rotate(-8 998 188)"/>
+<path d="M969 105H1029M969 268H1029" stroke="#536a2b" stroke-width="5" transform="rotate(-8 998 188)"/>
+<rect x="1071" y="54" width="103" height="253" rx="21" fill="#edf0df" transform="rotate(9 1122 180)"/>
+<rect x="1086" y="111" width="73" height="127" rx="12" fill="#27391e" transform="rotate(9 1122 180)"/>
+<text x="64" y="74" fill="#d7ff70" font-family="Arial, sans-serif" font-size="16" font-weight="700" letter-spacing="4">ANDROID FIRST · IN DEVELOPMENT</text>
+<text x="60" y="173" fill="#f0f2e9" font-family="Arial, sans-serif" font-size="88" font-weight="700" letter-spacing="-4">My Staff</text>
+<text x="64" y="227" fill="#d7ff70" font-family="Arial, sans-serif" font-size="29">Your collection, one photo at a time.</text>
+<text x="64" y="285" fill="#aab4a2" font-family="Arial, sans-serif" font-size="20">Energy cans. Pringles tubes. Original photos that stay yours.</text>
+</svg>

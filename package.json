@@ -1,0 +1,36 @@
+{
+  "name": "my-staff",
+  "version": "0.1.0",
+  "private": true,
+  "packageManager": "pnpm@10.34.5",
+  "engines": {
+    "node": ">=22.12 <25"
+  },
+  "scripts": {
+    "build:contracts": "pnpm --filter @my-staff/contracts build",
+    "build": "pnpm build:contracts && pnpm --filter @my-staff/server build",
+    "typecheck": "pnpm build:contracts && pnpm -r --if-present typecheck",
+    "test": "node scripts/local.mjs test",
+    "verify": "pnpm typecheck && pnpm test && pnpm build",
+    "dev:mobile": "pnpm build:contracts && pnpm --filter @my-staff/mobile start",
+    "dev:server": "node scripts/local.mjs api",
+    "dev:worker": "node scripts/local.mjs worker",
+    "infra:up": "docker compose up -d --wait",
+    "infra:stop": "docker compose stop",
+    "db:migrate": "node scripts/local.mjs migrate",
+    "export:android": "pnpm build:contracts && pnpm --filter @my-staff/mobile exec expo export --platform android",
+    "setup:local": "node scripts/local.mjs setup",
+    "dev:backend": "node scripts/local.mjs dev",
+    "apk:android": "node scripts/android-apk.mjs",
+    "format": "prettier --write .",
+    "format:check": "prettier --check .",
+    "clean:cache": "node scripts/clean-cache.mjs"
+  },
+  "devDependencies": {
+    "@types/node": "^22.20.0",
+    "prettier": "^3.9.6",
+    "tsx": "^4.21.0",
+    "typescript": "~5.9.3",
+    "vitest": "^4.0.18"
+  }
+}

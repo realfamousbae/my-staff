@@ -1,0 +1,19 @@
+name: my-staff
+services:
+  postgres:
+    image: postgres:17-alpine
+    environment:
+      POSTGRES_USER: collection
+      POSTGRES_PASSWORD: local-development-only
+      POSTGRES_DB: collection
+    ports:
+      - "127.0.0.1:55432:5432"
+    volumes:
+      - collection-postgres:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U collection -d collection"]
+      interval: 2s
+      timeout: 3s
+      retries: 30
+volumes:
+  collection-postgres:
