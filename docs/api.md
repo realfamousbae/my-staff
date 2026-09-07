@@ -15,6 +15,7 @@ The current API uses `/v1`. JSON request bodies are validated with Zod. This is 
 | PATCH  | `/v1/items/:id`                    | Edit, link an edition, delete or restore an item                    |
 | POST   | `/v1/items/:id/media`              | Allocate an original-media upload                                   |
 | PUT    | `/v1/uploads/:id`                  | Upload raw bytes to the local storage driver                        |
+| POST   | `/v1/media/:id/upload-ticket`      | Refresh the ticket for an allocated upload                          |
 | POST   | `/v1/media/:id/confirm`            | Verify and confirm the uploaded original                            |
 | GET    | `/v1/media/:id/content`            | Read private media belonging to the current user                    |
 | POST   | `/v1/items/:id/process`            | Request processing after upload confirmation                        |
@@ -34,6 +35,8 @@ An original upload declares its byte length, SHA-256 and MIME type. The server a
 The API checks ownership of personal items and media. Confirmed catalog editions are shared; a draft is visible to its creator. Do not treat a catalog edition as ownership of a personal item.
 
 ## Archives and processing
+
+For `POST /v1/import`, send the ZIP as raw bytes with `Content-Type: application/zip` and the bearer authorization header.
 
 The server archive contains `manifest.json` and media. The mobile offline archive uses a separate `my-collection-local` manifest. Do not assume these formats are interchangeable. Archive processing is bounded to 200 MB compressed/source data and 400 MB declared expanded import data; large collections need future batching support.
 

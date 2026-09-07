@@ -74,7 +74,7 @@ export ANDROID_HOME="/path/to/android-sdk"
 pnpm apk:android
 ```
 
-The build script runs Android prebuild without Xcode, builds an ARM64 APK, and writes the APK and hash to `artifacts/`. Its fallback paths are specific to Homebrew on Apple Silicon; set the variables explicitly on other machines. The generated `android/` and `ios/` folders are not committed. The manual **Android APK** workflow also provides a build artifact.
+The build script runs Android prebuild without Xcode, builds an ARM64 APK, and writes the APK and hash to `artifacts/`. Its fallback paths are specific to Homebrew on Apple Silicon; set the variables explicitly on other machines. The generated `android/` and `ios/` folders are not committed.
 
 ## Checks
 
