@@ -4,6 +4,15 @@ Changes affecting users and contributors are recorded here. During alpha develop
 
 ## Unreleased
 
+### Maintenance
+
+- Update `fflate` to 0.8.3 in mobile/server, including upstream ZIP-reading and TypeScript fixes.
+- Update Supertest to 7.2.2, its types to 7.2.1, and Express types to 5.0.6.
+- Align root/server Vitest on 5.0.0.
+- Update the AWS S3 client/presigner to 3.1127.0 and replace xcode's vulnerable uuid dependency with CommonJS-compatible 11.1.1.
+- Prevent presigned S3 uploads from being tied to an empty-body checksum; original-photo SHA-256 verification remains enforced before confirmation.
+- Check Expo dependency compatibility in CI and defer standalone React Native minor/major updates to the Expo SDK upgrade workflow.
+
 Planned work is tracked in [ROADMAP.md](ROADMAP.md) and GitHub Issues.
 
 ## 0.2.0-alpha.1 · 2026-09-08

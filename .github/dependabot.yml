@@ -10,6 +10,11 @@ updates:
     schedule:
       interval: monthly
     open-pull-requests-limit: 5
+    # React Native minor/major upgrades must follow a compatible Expo SDK.
+    ignore:
+      - dependency-name: react-native
+        update-types:
+          ["version-update:semver-minor", "version-update:semver-major"]
     groups:
       development-patches:
         dependency-type: development

@@ -37,6 +37,7 @@ jobs:
           node-version: "22"
           cache: pnpm
       - run: pnpm install --frozen-lockfile
+      - run: pnpm check:mobile-deps
       - run: pnpm format:check
       - run: pnpm verify
       - run: pnpm export:android
