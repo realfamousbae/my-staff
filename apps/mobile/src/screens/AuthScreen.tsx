@@ -9,6 +9,7 @@ import {
 } from "react-native";
 import { colors, text } from "../theme";
 import { Button, IconButton, Pill } from "../ui";
+import { useSafeAreaInsets } from "react-native-safe-area-context";
 
 export function AuthScreen({
   onBack,
@@ -20,6 +21,7 @@ export function AuthScreen({
   onRegister: (email: string, password: string) => Promise<void>;
 }) {
   const [mode, setMode] = useState<"login" | "register">("login");
+  const insets = useSafeAreaInsets();
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [busy, setBusy] = useState(false);
@@ -44,7 +46,10 @@ export function AuthScreen({
   }
   return (
     <KeyboardAvoidingView
-      style={styles.page}
+      style={[
+        styles.page,
+        { paddingTop: insets.top, paddingBottom: insets.bottom },
+      ]}
       behavior={Platform.select({ ios: "padding", default: undefined })}
     >
       <View style={styles.top}>

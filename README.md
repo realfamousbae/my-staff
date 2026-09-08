@@ -6,7 +6,7 @@
   <a href="https://github.com/realfamousbae/my-staff/actions/workflows/verify.yml"><img src="https://github.com/realfamousbae/my-staff/actions/workflows/verify.yml/badge.svg" alt="Verify" /></a>
   <img src="https://img.shields.io/badge/status-active_development-d7ff70?labelColor=171c16" alt="Active development" />
   <img src="https://img.shields.io/badge/platform-Android_first-3ddc84?labelColor=171c16" alt="Android first" />
-  <img src="https://img.shields.io/badge/version-0.1.0_alpha-f4c66a?labelColor=171c16" alt="0.1.0 alpha" />
+  <img src="https://img.shields.io/badge/version-0.2.0_alpha-f4c66a?labelColor=171c16" alt="0.2.0 alpha" />
 </p>
 
 <p align="center">
@@ -20,7 +20,7 @@
 </p>
 
 > [!IMPORTANT]
-> **This is an early prototype in active development.** Android is the current test platform; iOS is planned. AI adapters are implemented but disabled by default and have not been evaluated on a real collection. There is no hosted public service or store release. The current app interface is in Russian; “Моя коллекция” is its working title.
+> **This is an early prototype in active development.** Android is the current test platform; iOS is planned. AI adapters are implemented but disabled by default and have not been evaluated on a real collection. There is no hosted public service or store release. The app is named My Staff and its current interface is in Russian.
 
 ## What it does
 
@@ -49,7 +49,9 @@ These are actual Android emulator screenshots using an explicitly labeled **TEST
 
 ## Try the prototype
 
-Download the ARM64 APK and SHA-256 file from the [v0.1.0-alpha.1 prerelease](https://github.com/realfamousbae/my-staff/releases/tag/v0.1.0-alpha.1). It runs without Expo Go, Metro, an account, or an AI key. Camera/import, local cards, edits, and backups can be tried offline.
+Download the ARM64 APK and SHA-256 file from the [v0.2.0-alpha.1 prerelease](https://github.com/realfamousbae/my-staff/releases/tag/v0.2.0-alpha.1). It runs without Expo Go, Metro, an account, or an AI key. Camera/import, local cards, edits, and backups can be tried offline.
+
+Version 0.2 adds a purple M launcher icon, Android back navigation, and a gallery for original photos and additional angles. Photo import also works without camera permission.
 
 The APK uses a development signing key and is intended for personal testing. Samsung Galaxy S24 Ultra is the target physical device, but the recorded end-to-end verification used an Android API 36 ARM64 emulator. See [verification and limitations](docs/prototype-verification.md).
 
@@ -112,7 +114,7 @@ pnpm apk:android     # Standalone ARM64 test APK
 pnpm clean:cache     # Generated project build caches, after preserving the APK
 ```
 
-The recorded baseline has **41 passing tests**, including real PostgreSQL and Nest HTTP integration tests. Native verification additionally covered sync, original-photo checksums, ZIP restoration, repeat import, editing, filters, deletion, and restart persistence. CI and device testing are separate checks.
+The automated suite has **45 passing tests**, including real PostgreSQL and Nest HTTP integration tests and navigation regressions. Native verification additionally covered sync, original-photo checksums, ZIP restoration, repeat import, editing, filters, deletion, and restart persistence; see the dated [verification report](docs/prototype-verification.md) for each release. CI and device testing are separate checks.
 
 ## Current limits
 

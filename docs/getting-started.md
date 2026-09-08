@@ -32,7 +32,7 @@ pnpm dev:worker
 
 ## Standalone app
 
-Download the APK and `.sha256` file from the [prerelease](https://github.com/realfamousbae/my-staff/releases/tag/v0.1.0-alpha.1). Place them in `artifacts/` if following the commands below.
+Download the APK and `.sha256` file from the [prerelease](https://github.com/realfamousbae/my-staff/releases/tag/v0.2.0-alpha.1). Place them in `artifacts/` if following the commands below.
 
 ```sh
 # macOS; Linux can use sha256sum -c instead

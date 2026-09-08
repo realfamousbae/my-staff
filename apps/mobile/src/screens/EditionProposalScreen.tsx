@@ -11,6 +11,7 @@ import {
 import type { CollectibleCategory } from "../models";
 import { colors, text } from "../theme";
 import { Button, IconButton } from "../ui";
+import { useSafeAreaInsets } from "react-native-safe-area-context";
 
 export function EditionProposalScreen({
   category,
@@ -22,6 +23,7 @@ export function EditionProposalScreen({
   onSubmit: (input: Record<string, unknown>) => Promise<void>;
 }) {
   const [brand, setBrand] = useState("");
+  const insets = useSafeAreaInsets();
   const [name, setName] = useState("");
   const [flavor, setFlavor] = useState("");
   const [market, setMarket] = useState("");
@@ -60,7 +62,10 @@ export function EditionProposalScreen({
   }
   return (
     <KeyboardAvoidingView
-      style={styles.page}
+      style={[
+        styles.page,
+        { paddingTop: insets.top, paddingBottom: insets.bottom },
+      ]}
       behavior={Platform.select({ ios: "padding", default: undefined })}
     >
       <View style={styles.top}>

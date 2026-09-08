@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useReducer, useState } from "react";
 import {
   ActivityIndicator,
   Alert,
@@ -24,19 +24,8 @@ import { EditionProposalScreen } from "./screens/EditionProposalScreen";
 import { DeletedScreen } from "./screens/DeletedScreen";
 import { colors, spacing } from "./theme";
 import { Button, Icon, IconButton } from "./ui";
-
-type Screen =
-  | "library"
-  | "session"
-  | "settings"
-  | "deleted"
-  | "auth"
-  | "choose-category"
-  | "capture"
-  | "item"
-  | "edit"
-  | "catalog"
-  | "proposal";
+import { navigate, type Screen } from "./navigation";
+import { useBackAction } from "./useBackAction";
 const layer = getDataLayer();
 const initial: DataSnapshot = {
   ready: false,
@@ -47,7 +36,15 @@ const initial: DataSnapshot = {
 
 function Shell() {
   const [snapshot, setSnapshot] = useState<DataSnapshot>(initial);
-  const [screen, setScreen] = useState<Screen>("library");
+  const [history, dispatch] = useReducer(navigate, ["library"]);
+  const screen = history[history.length - 1];
+  const setScreen = (screen: Screen) => dispatch({ type: "open", screen });
+  const goBack = () => dispatch({ type: "back" });
+  useBackAction(() => {
+    if (history.length === 1) return false;
+    goBack();
+    return true;
+  });
   const [selected, setSelected] = useState<CollectionItem | null>(null);
   const [deleted, setDeleted] = useState<CollectionItem[]>([]);
   const [captureCategory, setCaptureCategory] =
@@ -135,7 +132,7 @@ function Shell() {
       snapshot.activeSession?.id,
     );
     setSelected(item);
-    setScreen("item");
+    dispatch({ type: "captured" });
   }
   if (initializationError)
     return (
@@ -155,7 +152,7 @@ function Shell() {
   if (screen === "choose-category")
     return (
       <CategoryChoice
-        onBack={() => setScreen("library")}
+        onBack={goBack}
         onSelect={(category) => {
           setCaptureCategory(category);
           setScreen("capture");
@@ -163,17 +160,11 @@ function Shell() {
       />
     );
   if (screen === "capture")
-    return (
-      <CaptureScreen
-        onClose={() => setScreen("library")}
-        onCapture={savePhoto}
-        onImport={savePhoto}
-      />
-    );
+    return <CaptureScreen onClose={goBack} onCapture={savePhoto} />;
   if (screen === "auth")
     return (
       <AuthScreen
-        onBack={() => setScreen("settings")}
+        onBack={goBack}
         onLogin={(email, password) => layer.login(email, password)}
         onRegister={(email, password) => layer.register(email, password)}
       />
@@ -182,7 +173,7 @@ function Shell() {
     return (
       <ItemScreen
         item={snapshot.items.find((x) => x.id === selected.id) ?? selected}
-        onBack={() => setScreen("library")}
+        onBack={goBack}
         onEdit={() => setScreen("edit")}
         onCatalog={() => setScreen("catalog")}
         onRetry={() => void layer.retry(selected.id)}
@@ -201,17 +192,17 @@ function Shell() {
         load={(query, category) => layer.searchCatalog(query, category)}
         onPick={async (editionId) => {
           await layer.linkEdition(selected.id, editionId);
-          setScreen("item");
+          goBack();
         }}
         onPropose={() => setScreen("proposal")}
-        onBack={() => setScreen("item")}
+        onBack={goBack}
       />
     );
   if (screen === "proposal" && selected)
     return (
       <EditionProposalScreen
         category={selected.category}
-        onBack={() => setScreen("catalog")}
+        onBack={goBack}
         onSubmit={(input) => layer.proposeEdition(input)}
       />
     );
@@ -219,7 +210,7 @@ function Shell() {
     return (
       <DeletedScreen
         items={deleted}
-        onBack={() => setScreen("settings")}
+        onBack={goBack}
         onRestore={async (itemId) => {
           await layer.restoreItem(itemId);
           setDeleted((items) => items.filter((item) => item.id !== itemId));
@@ -231,7 +222,7 @@ function Shell() {
     return (
       <EditItemScreen
         item={snapshot.items.find((x) => x.id === selected.id) ?? selected}
-        onBack={() => setScreen("item")}
+        onBack={goBack}
         onSave={(patch) => layer.updateItem(selected.id, patch)}
       />
     );

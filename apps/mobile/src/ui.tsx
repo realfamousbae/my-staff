@@ -154,7 +154,12 @@ const styles = StyleSheet.create({
     flexDirection: "row",
     gap: 8,
   },
-  buttonText: { fontSize: 16, fontWeight: "700" },
+  buttonText: {
+    fontSize: 16,
+    fontWeight: "700",
+    flexShrink: 1,
+    textAlign: "center",
+  },
   disabled: { opacity: 0.45 },
   pressed: { opacity: 0.78, transform: [{ scale: 0.985 }] },
   iconButton: {

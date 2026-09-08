@@ -2,7 +2,7 @@
 
 Status: active development. This is a prioritised direction, not a release-date commitment. Track concrete work through [GitHub Issues](https://github.com/realfamousbae/my-staff/issues).
 
-## Current baseline · 0.1 alpha
+## Current baseline · 0.2 alpha
 
 - [x] Android-first Expo client and standalone ARM64 APK.
 - [x] Photo capture/import, personal cards, categories, notes and filters.
@@ -11,6 +11,7 @@ Status: active development. This is a prioritised direction, not a release-date 
 - [x] Catalog proposals and editor confirmation/merge APIs.
 - [x] Local ZIP export/import and server archives.
 - [x] PostgreSQL/HTTP tests and native emulator acceptance.
+- [x] Android back navigation, additional-photo gallery and camera-independent import.
 
 ## Next · collector validation
 
@@ -30,6 +31,7 @@ Status: active development. This is a prioritised direction, not a release-date 
 
 ## Optional AI
 
+- [ ] Resolve the photo-search/autofill request from issue #6: provider, privacy, cost and confirmation of suggestions.
 - [ ] Agree model selection and an explicit test budget.
 - [ ] Measure recognition quality against real packaging editions.
 - [ ] Check whether studio rendering preserves labels, language and design.
