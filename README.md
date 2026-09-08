@@ -114,7 +114,7 @@ pnpm apk:android     # Standalone ARM64 test APK
 pnpm clean:cache     # Generated project build caches, after preserving the APK
 ```
 
-The automated suite has **45 passing tests**, including real PostgreSQL and Nest HTTP integration tests and navigation regressions. Native verification additionally covered sync, original-photo checksums, ZIP restoration, repeat import, editing, filters, deletion, and restart persistence; see the dated [verification report](docs/prototype-verification.md) for each release. CI and device testing are separate checks.
+The automated suite has **47 tests**, including real PostgreSQL and Nest HTTP integration tests, S3 SDK checks against a loopback HTTP fixture, and navigation regressions. Native verification additionally covered sync, original-photo checksums, ZIP restoration, repeat import, editing, filters, deletion, and restart persistence; see the dated [verification report](docs/prototype-verification.md) for each release. CI and device testing are separate checks.
 
 ## Current limits
 

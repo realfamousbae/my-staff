@@ -34,6 +34,10 @@ export class StorageService {
           region: process.env.S3_REGION,
           endpoint: process.env.S3_ENDPOINT,
           forcePathStyle: process.env.S3_FORCE_PATH_STYLE === "true",
+          // Presigned uploads have no body here: the mobile client sends it
+          // later. Do not sign CRC32 of an empty body; confirm() verifies the
+          // actual original's size, SHA-256 and image signature before copying.
+          requestChecksumCalculation: "WHEN_REQUIRED",
         })
       : undefined;
   private pending(id: string) {

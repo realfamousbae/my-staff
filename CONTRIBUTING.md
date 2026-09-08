@@ -16,12 +16,15 @@ pnpm setup:local
 
 ```sh
 pnpm verify
+pnpm check:mobile-deps
 pnpm format:check
 ```
 
 For mobile changes, also run `pnpm export:android` and test affected native behavior on Android. A successful JS bundle does not prove that camera, SQLite, file access or permissions work.
 
 Integration tests require loopback PostgreSQL and create isolated schemas. Never weaken their database guards or point tests at a live service. Keep external AI disabled for ordinary tests.
+
+React Native upgrades must follow the installed Expo SDK's supported versions. Dependabot leaves minor/major React Native upgrades to that coordinated workflow; CI checks mobile dependency compatibility with Expo. Vitest is pinned to the same version at the workspace root and in the server so tests use a single runner.
 
 ## Boundaries to preserve
 

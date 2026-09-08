@@ -1,6 +1,9 @@
 packages:
   - apps/*
   - packages/*
+overrides:
+  # xcode uses only uuid.v4(); v11 retains that CommonJS API and fixes GHSA-w5hq-g745-h8pq.
+  "xcode@3.0.1>uuid": "11.1.1"
 onlyBuiltDependencies:
   - esbuild
   - sharp

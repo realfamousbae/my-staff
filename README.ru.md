@@ -64,7 +64,7 @@ adb install -r artifacts/my-collection-android.apk
 
 - [Архитектура](docs/architecture.md) и [принятые решения](docs/decisions/README.md)
 - [API](docs/api.md) и [сервер](apps/server/docs/server.md)
-- [Проверки прототипа](docs/prototype-verification.md): 45 автоматических тестов и отдельные нативные прогоны
+- [Проверки прототипа](docs/prototype-verification.md): в текущей ветке 47 автоматических тестов; нативные прогоны записаны отдельно по версиям
 - [Roadmap](ROADMAP.md), [история изменений](CHANGELOG.md), [участие в разработке](CONTRIBUTING.md)
 - [Безопасность](SECURITY.md)
 
