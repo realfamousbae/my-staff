@@ -13,8 +13,8 @@
     "db:migrate": "tsx src/db/migrate.ts",
     "catalog:grant-editor": "node scripts/catalog-editor.mjs",
     "typecheck": "tsc -p tsconfig.build.json --noEmit",
-    "test": "vitest run",
-    "test:watch": "vitest"
+    "test": "pnpm -w exec vitest run apps/server/test",
+    "test:watch": "pnpm -w exec vitest apps/server/test"
   },
   "dependencies": {
     "@aws-sdk/client-s3": "3.1127.0",
