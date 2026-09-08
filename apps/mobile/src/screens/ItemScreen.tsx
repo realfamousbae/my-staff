@@ -4,6 +4,8 @@ import {
   Animated,
   Alert,
   Image,
+  Modal,
+  Pressable,
   ScrollView,
   StyleSheet,
   Text,
@@ -12,6 +14,8 @@ import {
 import type { CollectionItem } from "../models";
 import { colors, radius, spacing, text } from "../theme";
 import { Button, Icon, IconButton, Status } from "../ui";
+import { SafeAreaView } from "react-native-safe-area-context";
+import { useBackAction } from "../useBackAction";
 
 export function ItemScreen({
   item,
@@ -32,6 +36,16 @@ export function ItemScreen({
 }) {
   const animation = useRef(new Animated.Value(0)).current;
   const [back, setBack] = useState(false);
+  const [attaching, setAttaching] = useState(false);
+  const attachingRef = useRef(false);
+  const [viewedPhoto, setViewedPhoto] = useState<string | null>(null);
+  const photos = [item.photoUri, ...(item.additionalPhotoUris ?? [])].filter(
+    (uri): uri is string => !!uri,
+  );
+  useBackAction(() => {
+    if (!attachingRef.current) onBack();
+    return true;
+  });
   const flip = () => {
     Animated.spring(animation, {
       toValue: back ? 0 : 1,
@@ -63,12 +77,25 @@ export function ItemScreen({
     ],
   };
   const addAngle = async () => {
-    const picked = await ImagePicker.launchImageLibraryAsync({
-      mediaTypes: ["images"],
-      quality: 0.9,
-    });
-    if (!picked.canceled && picked.assets[0]?.uri)
-      await onAttach(picked.assets[0].uri);
+    if (attachingRef.current) return;
+    attachingRef.current = true;
+    setAttaching(true);
+    try {
+      const picked = await ImagePicker.launchImageLibraryAsync({
+        mediaTypes: ["images"],
+        quality: 0.9,
+      });
+      if (!picked.canceled && picked.assets[0]?.uri)
+        await onAttach(picked.assets[0].uri);
+    } catch {
+      Alert.alert(
+        "Не удалось добавить фото",
+        "Выберите изображение ещё раз. Если ошибка повторится, проверьте свободное место на телефоне.",
+      );
+    } finally {
+      attachingRef.current = false;
+      setAttaching(false);
+    }
   };
   const remove = () =>
     Alert.alert(
@@ -91,14 +118,22 @@ export function ItemScreen({
         ? (["Синхронизировано", "lime"] as const)
         : (["Сохранено на устройстве", "muted"] as const);
   return (
-    <View style={styles.page}>
+    <SafeAreaView style={styles.page}>
       <View style={styles.top}>
-        <IconButton name="chevron-back" label="Назад" onPress={onBack} />
+        <IconButton
+          name="chevron-back"
+          label="Назад"
+          onPress={() => {
+            if (!attachingRef.current) onBack();
+          }}
+        />
         <Text style={styles.topTitle}>Карточка</Text>
         <IconButton
           name="create-outline"
           label="Изменить сведения"
-          onPress={onEdit}
+          onPress={() => {
+            if (!attachingRef.current) onEdit();
+          }}
         />
       </View>
       <ScrollView contentContainerStyle={styles.scroll}>
@@ -139,6 +174,27 @@ export function ItemScreen({
           onPress={flip}
         />
         <View style={styles.info}>
+          <Text style={text.section}>Фото предмета · {photos.length}</Text>
+          <ScrollView horizontal contentContainerStyle={styles.photos}>
+            {photos.map((uri, index) => (
+              <Pressable
+                key={uri}
+                accessibilityRole="button"
+                accessibilityLabel={
+                  index === 0
+                    ? "Открыть оригинальное фото"
+                    : `Открыть ракурс ${index}`
+                }
+                onPress={() => setViewedPhoto(uri)}
+                style={styles.photoTile}
+              >
+                <Image source={{ uri }} style={styles.photoThumbnail} />
+                <Text style={styles.photoLabel}>
+                  {index === 0 ? "Оригинал" : `Ракурс ${index}`}
+                </Text>
+              </Pressable>
+            ))}
+          </ScrollView>
           <Status tone={status[1]}>
             {item.artworkStatus === "processing"
               ? "Оформляем карточку"
@@ -153,13 +209,21 @@ export function ItemScreen({
             icon="albums-outline"
             tone="quiet"
             onPress={onCatalog}
+            disabled={attaching}
           />
           <Button
-            label="Добавить дополнительный ракурс"
+            label={
+              attaching ? "Добавляем фото…" : "Добавить дополнительный ракурс"
+            }
             icon="images-outline"
             tone="quiet"
             onPress={() => void addAngle()}
+            disabled={attaching}
           />
+          <Text style={text.body}>
+            Дополнительные ракурсы доступны в галерее выше. На лицевой стороне
+            остаётся основное фото.
+          </Text>
           <Text style={text.section}>Сведения</Text>
           <Fact
             label="Тип"
@@ -187,10 +251,31 @@ export function ItemScreen({
             icon="trash-outline"
             tone="danger"
             onPress={remove}
+            disabled={attaching}
           />
         </View>
       </ScrollView>
-    </View>
+      <Modal
+        visible={!!viewedPhoto}
+        onRequestClose={() => setViewedPhoto(null)}
+        animationType="fade"
+      >
+        <SafeAreaView style={styles.page}>
+          <View style={styles.top}>
+            <IconButton
+              name="close"
+              label="Закрыть фото"
+              onPress={() => setViewedPhoto(null)}
+            />
+            <Text style={styles.topTitle}>Фото предмета</Text>
+            <View style={{ width: 48 }} />
+          </View>
+          {viewedPhoto && (
+            <Image source={{ uri: viewedPhoto }} style={styles.fullPhoto} />
+          )}
+        </SafeAreaView>
+      </Modal>
+    </SafeAreaView>
   );
 }
 function Art({
@@ -237,6 +322,17 @@ function Fact({ label, value }: { label: string; value: string }) {
 }
 const styles = StyleSheet.create({
   page: { flex: 1, backgroundColor: colors.canvas },
+  photos: { gap: 12 },
+  photoTile: { width: 110, gap: 6 },
+  photoThumbnail: {
+    width: 110,
+    height: 140,
+    borderRadius: 12,
+    resizeMode: "cover",
+    backgroundColor: colors.surfaceRaised,
+  },
+  photoLabel: { color: colors.muted, fontSize: 12 },
+  fullPhoto: { flex: 1, resizeMode: "contain" },
   top: {
     height: 68,
     paddingHorizontal: 16,

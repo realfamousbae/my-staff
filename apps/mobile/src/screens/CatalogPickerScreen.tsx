@@ -12,6 +12,7 @@ import type { Edition } from "@my-staff/contracts";
 import type { CollectibleCategory } from "../models";
 import { colors, spacing, text } from "../theme";
 import { Button, Icon, IconButton, Pill } from "../ui";
+import { SafeAreaView } from "react-native-safe-area-context";
 
 export function CatalogPickerScreen({
   category,
@@ -49,7 +50,7 @@ export function CatalogPickerScreen({
     void reload("");
   }, [category]);
   return (
-    <View style={styles.page}>
+    <SafeAreaView style={styles.page}>
       <View style={styles.top}>
         <IconButton name="chevron-back" label="Назад" onPress={onBack} />
         <Text style={styles.topTitle}>Выбрать издание</Text>
@@ -125,7 +126,7 @@ export function CatalogPickerScreen({
           onPress={onPropose}
         />
       </View>
-    </View>
+    </SafeAreaView>
   );
 }
 function EditionRow({

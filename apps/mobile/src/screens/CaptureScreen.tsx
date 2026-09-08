@@ -11,21 +11,30 @@ import {
 } from "react-native";
 import { colors, spacing, text } from "../theme";
 import { Button, IconButton, Status } from "../ui";
+import { useBackAction } from "../useBackAction";
+import { SafeAreaView } from "react-native-safe-area-context";
 
 export function CaptureScreen({
   onClose,
   onCapture,
-  onImport,
 }: {
   onClose: () => void;
   onCapture: (uri: string) => Promise<void>;
-  onImport: (uri: string) => Promise<void>;
 }) {
   const camera = useRef<CameraView>(null);
   const [permission, requestPermission] = useCameraPermissions();
   const [saving, setSaving] = useState(false);
   const [preview, setPreview] = useState<string | null>(null);
+  const busy = useRef(false);
+  useBackAction(() => {
+    if (busy.current) return true;
+    if (preview) setPreview(null);
+    else onClose();
+    return true;
+  });
   async function snap() {
+    if (busy.current) return;
+    busy.current = true;
     try {
       const result = await camera.current?.takePictureAsync({
         quality: 0.9,
@@ -37,17 +46,32 @@ export function CaptureScreen({
         "Не удалось сделать снимок",
         "Проверьте доступ к камере и попробуйте ещё раз.",
       );
+    } finally {
+      busy.current = false;
     }
   }
   async function pick() {
-    const result = await ImagePicker.launchImageLibraryAsync({
-      mediaTypes: ["images"],
-      quality: 0.9,
-    });
-    if (!result.canceled) setPreview(result.assets[0]?.uri ?? null);
+    if (busy.current) return;
+    busy.current = true;
+    try {
+      const result = await ImagePicker.launchImageLibraryAsync({
+        mediaTypes: ["images"],
+        quality: 0.9,
+      });
+      if (!result.canceled && result.assets[0]?.uri)
+        setPreview(result.assets[0].uri);
+    } catch {
+      Alert.alert(
+        "Не удалось открыть фото",
+        "Попробуйте выбрать изображение ещё раз.",
+      );
+    } finally {
+      busy.current = false;
+    }
   }
   async function commit() {
-    if (!preview) return;
+    if (!preview || busy.current) return;
+    busy.current = true;
     setSaving(true);
     try {
       await onCapture(preview);
@@ -58,6 +82,7 @@ export function CaptureScreen({
         "Попробуйте повторить сохранение. Фото останется на устройстве, пока вы не закроете этот экран.",
       );
     } finally {
+      busy.current = false;
       setSaving(false);
     }
   }
@@ -67,27 +92,18 @@ export function CaptureScreen({
         <ActivityIndicator color={colors.lime} />
       </View>
     );
-  if (!permission.granted)
-    return (
-      <View style={styles.permission}>
-        <Text style={text.eyebrow}>Камера</Text>
-        <Text style={text.title}>Нужен доступ к камере</Text>
-        <Text style={text.body}>
-          Так фото станет оригиналом предмета в вашей личной коллекции.
-        </Text>
-        <Button label="Разрешить камеру" onPress={requestPermission} />
-      </View>
-    );
   if (preview)
     return (
-      <View style={styles.previewPage}>
+      <SafeAreaView style={styles.previewPage}>
         <Image source={{ uri: preview }} style={styles.preview} />
         <View style={styles.previewShade} />
         <View style={styles.previewTop}>
           <IconButton
             name="close"
             label="Отменить"
-            onPress={() => setPreview(null)}
+            onPress={() => {
+              if (!busy.current) setPreview(null);
+            }}
           />
         </View>
         <View style={styles.previewBottom}>
@@ -102,12 +118,30 @@ export function CaptureScreen({
             disabled={saving}
             onPress={commit}
           />
-          <Button label="Выбрать другое фото" tone="quiet" onPress={pick} />
+          <Button
+            label="Выбрать другое фото"
+            tone="quiet"
+            onPress={pick}
+            disabled={saving}
+          />
         </View>
-      </View>
+      </SafeAreaView>
+    );
+  if (!permission.granted)
+    return (
+      <SafeAreaView style={styles.permission}>
+        <Text style={text.eyebrow}>Камера и фото</Text>
+        <Text style={text.title}>Добавить предмет</Text>
+        <Text style={text.body}>
+          Разрешите доступ к камере для съёмки или выберите готовое фото.
+        </Text>
+        <Button label="Разрешить камеру" onPress={requestPermission} />
+        <Button label="Импортировать фото" tone="quiet" onPress={pick} />
+        <Button label="Назад" tone="quiet" onPress={onClose} />
+      </SafeAreaView>
     );
   return (
-    <View style={styles.page}>
+    <SafeAreaView style={styles.page}>
       <CameraView ref={camera} style={StyleSheet.absoluteFill} facing="back" />
       <View style={styles.shade} />
       <View style={styles.top}>
@@ -138,7 +172,7 @@ export function CaptureScreen({
           <View style={styles.balance} />
         </View>
       </View>
-    </View>
+    </SafeAreaView>
   );
 }
 const styles = StyleSheet.create({

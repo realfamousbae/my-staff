@@ -1,6 +1,7 @@
-import { useEffect, useState } from "react";
+import { useRef, useState } from "react";
 import {
   KeyboardAvoidingView,
+  Alert,
   Platform,
   ScrollView,
   StyleSheet,
@@ -11,6 +12,8 @@ import {
 import type { CollectibleCategory, CollectionItem } from "../models";
 import { colors, spacing, text } from "../theme";
 import { Button, IconButton, Pill } from "../ui";
+import { useBackAction } from "../useBackAction";
+import { useSafeAreaInsets } from "react-native-safe-area-context";
 
 type Patch = Pick<
   CollectionItem,
@@ -30,13 +33,33 @@ export function EditItemScreen({
   const [notes, setNotes] = useState(item.notes ?? "");
   const [category, setCategory] = useState<CollectibleCategory>(item.category);
   const [saving, setSaving] = useState(false);
-  useEffect(() => {
-    setTitle(item.title ?? "");
-    setEditionName(item.editionName ?? "");
-    setNotes(item.notes ?? "");
-    setCategory(item.category);
-  }, [item]);
+  const busy = useRef(false);
+  const insets = useSafeAreaInsets();
+  const close = () => {
+    if (busy.current) return;
+    if (
+      title !== (item.title ?? "") ||
+      editionName !== (item.editionName ?? "") ||
+      notes !== (item.notes ?? "") ||
+      category !== item.category
+    ) {
+      Alert.alert(
+        "Не сохранять изменения?",
+        "Изменения в сведениях будут потеряны.",
+        [
+          { text: "Продолжить редактирование", style: "cancel" },
+          { text: "Не сохранять", style: "destructive", onPress: onBack },
+        ],
+      );
+    } else onBack();
+  };
+  useBackAction(() => {
+    close();
+    return true;
+  });
   async function save() {
+    if (busy.current) return;
+    busy.current = true;
     setSaving(true);
     try {
       await onSave({
@@ -46,17 +69,26 @@ export function EditItemScreen({
         category,
       });
       onBack();
+    } catch {
+      Alert.alert(
+        "Не удалось сохранить изменения",
+        "Введённые сведения остались на экране. Попробуйте сохранить ещё раз.",
+      );
     } finally {
+      busy.current = false;
       setSaving(false);
     }
   }
   return (
     <KeyboardAvoidingView
-      style={styles.page}
+      style={[
+        styles.page,
+        { paddingTop: insets.top, paddingBottom: insets.bottom },
+      ]}
       behavior={Platform.select({ ios: "padding", default: undefined })}
     >
       <View style={styles.top}>
-        <IconButton name="close" label="Закрыть" onPress={onBack} />
+        <IconButton name="close" label="Закрыть" onPress={close} />
         <Text style={styles.topTitle}>Сведения о предмете</Text>
         <View style={styles.spacer} />
       </View>

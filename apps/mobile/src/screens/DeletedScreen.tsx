@@ -2,6 +2,7 @@ import { FlatList, StyleSheet, Text, View } from "react-native";
 import type { CollectionItem } from "../models";
 import { colors, text } from "../theme";
 import { Button, EmptyState, IconButton } from "../ui";
+import { SafeAreaView } from "react-native-safe-area-context";
 
 export function DeletedScreen({
   items,
@@ -13,7 +14,7 @@ export function DeletedScreen({
   onRestore: (id: string) => Promise<void>;
 }) {
   return (
-    <View style={styles.page}>
+    <SafeAreaView style={styles.page}>
       <View style={styles.top}>
         <IconButton name="chevron-back" label="Назад" onPress={onBack} />
         <Text style={styles.topTitle}>Удалённые предметы</Text>
@@ -49,7 +50,7 @@ export function DeletedScreen({
           </View>
         )}
       />
-    </View>
+    </SafeAreaView>
   );
 }
 const styles = StyleSheet.create({
