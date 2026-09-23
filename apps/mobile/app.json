@@ -32,7 +32,10 @@
           "microphonePermission": false
         }
       ],
-      "./plugins/with-local-network.cjs"
+      "./plugins/with-local-network.cjs",
+      "expo-secure-store",
+      "expo-sharing",
+      "expo-sqlite"
     ]
   }
 }
