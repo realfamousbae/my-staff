@@ -207,6 +207,11 @@ export class DataLayer {
     await this.emit();
     if (this.session) void this.syncAndEmit();
   }
+  async setPrimaryPhoto(itemId: string, photoUri: string) {
+    await this.initialize();
+    await this.capture.setPrimaryMedia(itemId, photoUri);
+    await this.emit();
+  }
   async updateItem(
     id: string,
     patch: Partial<
@@ -896,9 +901,15 @@ export class DataLayer {
   }
   private async toUi(item: LocalItem): Promise<CollectionItem> {
     const media = await this.requireStore().listMediaForItem(item.id);
-    const originals = media.filter(
-      (x) => x.role === "original" || x.role === "detail",
-    );
+    const originals = media
+      .filter((x) => x.role === "original" || x.role === "detail")
+      .sort((a, b) =>
+        a.role === b.role
+          ? a.createdAt.localeCompare(b.createdAt)
+          : a.role === "original"
+            ? -1
+            : 1,
+      );
     const artwork = media
       .filter((x) => x.role === "artwork" && x.localPath)
       .sort((a, b) => b.createdAt.localeCompare(a.createdAt))[0];

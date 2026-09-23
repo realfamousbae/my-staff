@@ -311,6 +311,75 @@ describe("capture coordinator", () => {
       ),
     ).toHaveLength(1);
   });
+  it("swaps the original role when a different photo is made primary", async () => {
+    const store = new MemoryStore();
+    const r = runtime();
+    const item: LocalItem = {
+      id: r.id(),
+      ownerId: "owner",
+      category: "energy",
+      title: null,
+      editionName: null,
+      editionId: null,
+      notes: null,
+      sessionId: null,
+      capturedAt: r.now(),
+      version: 1,
+      recognitionStatus: "unassigned",
+      artworkStatus: "pending",
+      captureState: "saved",
+      syncState: "synced",
+      deletedAt: null,
+      createdAt: r.now(),
+      updatedAt: r.now(),
+    };
+    const original: LocalMedia = {
+      id: r.id(),
+      itemId: item.id,
+      ownerId: "owner",
+      role: "original",
+      mimeType: "image/jpeg",
+      byteSize: 42,
+      sha256: "a".repeat(64),
+      localPath: "file://original.jpg",
+      remoteId: "remote-original",
+      state: "confirmed",
+      uploadUrl: null,
+      uploadHeaders: null,
+      lastError: null,
+      createdAt: r.now(),
+      updatedAt: r.now(),
+    };
+    const detail: LocalMedia = {
+      ...original,
+      id: r.id(),
+      role: "detail",
+      localPath: "file://detail.jpg",
+      remoteId: "remote-detail",
+    };
+    await store.putItem(item);
+    await store.putMedia(original);
+    await store.putMedia(detail);
+    const c = new CaptureCoordinator(store, file(), r);
+
+    await c.setPrimaryMedia(item.id, "file://detail.jpg");
+
+    const media = await store.listMediaForItem(item.id);
+    expect(media.find((entry) => entry.id === detail.id)?.role).toBe(
+      "original",
+    );
+    expect(media.find((entry) => entry.id === original.id)?.role).toBe(
+      "detail",
+    );
+  });
+  it("ignores setPrimaryMedia for an unknown local path", async () => {
+    const store = new MemoryStore();
+    const r = runtime();
+    const c = new CaptureCoordinator(store, file(), r);
+    await expect(
+      c.setPrimaryMedia("missing-item", "file://nope.jpg"),
+    ).resolves.toBeUndefined();
+  });
   it("keeps a missing provisional original for attention instead of failing recovery", async () => {
     const store = new MemoryStore();
     const r = runtime();

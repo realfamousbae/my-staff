@@ -9,7 +9,7 @@
     "scheme": "mycollection",
     "android": {
       "package": "com.mystaff.collection",
-      "versionCode": 2,
+      "versionCode": 3,
       "adaptiveIcon": {
         "foregroundImage": "./assets/adaptive-icon.png",
         "monochromeImage": "./assets/adaptive-icon.png",
@@ -32,7 +32,10 @@
           "microphonePermission": false
         }
       ],
-      "./plugins/with-local-network.cjs"
+      "./plugins/with-local-network.cjs",
+      "expo-secure-store",
+      "expo-sharing",
+      "expo-sqlite"
     ]
   }
 }

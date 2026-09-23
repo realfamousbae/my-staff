@@ -4,6 +4,16 @@ Changes affecting users and contributors are recorded here. During alpha develop
 
 ## Unreleased
 
+Planned work is tracked in [ROADMAP.md](ROADMAP.md) and GitHub Issues.
+
+## 0.2.0-alpha.2 · 2026-09-23
+
+App package version: `0.2.0`, Android version code: `3`.
+
+### Added
+
+- Choose any additional angle as an item's main photo directly from the full-screen photo viewer, closing the angle-selection request in [issue #8](https://github.com/realfamousbae/my-staff/issues/8).
+
 ### Maintenance
 
 - Update `fflate` to 0.8.3 in mobile/server, including upstream ZIP-reading and TypeScript fixes.
@@ -13,7 +23,9 @@ Changes affecting users and contributors are recorded here. During alpha develop
 - Prevent presigned S3 uploads from being tied to an empty-body checksum; original-photo SHA-256 verification remains enforced before confirmation.
 - Check Expo dependency compatibility in CI and defer standalone React Native minor/major updates to the Expo SDK upgrade workflow.
 
-Planned work is tracked in [ROADMAP.md](ROADMAP.md) and GitHub Issues.
+### Still pending
+
+Catalog search (also requested in issue #8) already shipped in 0.2.0-alpha.1's library and catalog-picker screens. The photo-search/autofill proposal from issue #6 remains tracked separately in [ROADMAP.md](ROADMAP.md).
 
 ## 0.2.0-alpha.1 · 2026-09-08
 

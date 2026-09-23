@@ -178,6 +178,7 @@ function Shell() {
         onCatalog={() => setScreen("catalog")}
         onRetry={() => void layer.retry(selected.id)}
         onAttach={(uri: string) => layer.attachPhoto(selected.id, uri)}
+        onSetPrimary={(uri: string) => layer.setPrimaryPhoto(selected.id, uri)}
         onDelete={async () => {
           await layer.deleteItem(selected.id);
           setScreen("library");

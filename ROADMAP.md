@@ -12,6 +12,7 @@ Status: active development. This is a prioritised direction, not a release-date 
 - [x] Local ZIP export/import and server archives.
 - [x] PostgreSQL/HTTP tests and native emulator acceptance.
 - [x] Android back navigation, additional-photo gallery and camera-independent import.
+- [x] Choose any additional angle as an item's main photo.
 
 ## Next · collector validation
 
