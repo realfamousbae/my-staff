@@ -248,7 +248,11 @@ export class CaptureCoordinator {
           role: "detail",
           updatedAt: now,
         });
-      await this.store.putMedia({ ...target, role: "original", updatedAt: now });
+      await this.store.putMedia({
+        ...target,
+        role: "original",
+        updatedAt: now,
+      });
     });
   }
 

@@ -293,9 +293,7 @@ export function ItemScreen({
           {viewedPhoto && viewedPhoto !== item.photoUri && (
             <View style={styles.fullPhotoActions}>
               <Button
-                label={
-                  settingPrimary ? "Обновляем…" : "Сделать основным фото"
-                }
+                label={settingPrimary ? "Обновляем…" : "Сделать основным фото"}
                 icon="star-outline"
                 onPress={() => void makePrimary(viewedPhoto)}
                 disabled={settingPrimary}
