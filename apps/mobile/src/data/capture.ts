@@ -234,6 +234,24 @@ export class CaptureCoordinator {
     return media;
   }
 
+  /** Swaps which photo is the item's front-facing "original", by local path. */
+  async setPrimaryMedia(itemId: string, localPath: string): Promise<void> {
+    const media = await this.store.listMediaForItem(itemId);
+    const target = media.find((entry) => entry.localPath === localPath);
+    if (!target || target.role === "original") return;
+    const current = media.find((entry) => entry.role === "original");
+    const now = this.runtime.now();
+    await this.store.transaction(async () => {
+      if (current)
+        await this.store.putMedia({
+          ...current,
+          role: "detail",
+          updatedAt: now,
+        });
+      await this.store.putMedia({ ...target, role: "original", updatedAt: now });
+    });
+  }
+
   /** Repairs records interrupted between the file move and SQLite commit. */
   async recover(): Promise<void> {
     for (const item of await this.store.listItems(true)) {

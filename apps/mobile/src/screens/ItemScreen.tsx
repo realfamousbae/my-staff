@@ -24,6 +24,7 @@ export function ItemScreen({
   onCatalog,
   onRetry,
   onAttach,
+  onSetPrimary,
   onDelete,
 }: {
   item: CollectionItem;
@@ -32,6 +33,7 @@ export function ItemScreen({
   onCatalog: () => void;
   onRetry: () => void;
   onAttach: (uri: string) => Promise<void>;
+  onSetPrimary: (uri: string) => Promise<void>;
   onDelete: () => Promise<void>;
 }) {
   const animation = useRef(new Animated.Value(0)).current;
@@ -39,9 +41,24 @@ export function ItemScreen({
   const [attaching, setAttaching] = useState(false);
   const attachingRef = useRef(false);
   const [viewedPhoto, setViewedPhoto] = useState<string | null>(null);
+  const [settingPrimary, setSettingPrimary] = useState(false);
   const photos = [item.photoUri, ...(item.additionalPhotoUris ?? [])].filter(
     (uri): uri is string => !!uri,
   );
+  const makePrimary = async (uri: string) => {
+    setSettingPrimary(true);
+    try {
+      await onSetPrimary(uri);
+      setViewedPhoto(null);
+    } catch {
+      Alert.alert(
+        "Не удалось сделать фото основным",
+        "Попробуйте ещё раз чуть позже.",
+      );
+    } finally {
+      setSettingPrimary(false);
+    }
+  };
   useBackAction(() => {
     if (!attachingRef.current) onBack();
     return true;
@@ -221,8 +238,8 @@ export function ItemScreen({
             disabled={attaching}
           />
           <Text style={text.body}>
-            Дополнительные ракурсы доступны в галерее выше. На лицевой стороне
-            остаётся основное фото.
+            Дополнительные ракурсы доступны в галерее выше. Откройте любой из
+            них, чтобы сделать его основным фото на лицевой стороне.
           </Text>
           <Text style={text.section}>Сведения</Text>
           <Fact
@@ -272,6 +289,18 @@ export function ItemScreen({
           </View>
           {viewedPhoto && (
             <Image source={{ uri: viewedPhoto }} style={styles.fullPhoto} />
+          )}
+          {viewedPhoto && viewedPhoto !== item.photoUri && (
+            <View style={styles.fullPhotoActions}>
+              <Button
+                label={
+                  settingPrimary ? "Обновляем…" : "Сделать основным фото"
+                }
+                icon="star-outline"
+                onPress={() => void makePrimary(viewedPhoto)}
+                disabled={settingPrimary}
+              />
+            </View>
           )}
         </SafeAreaView>
       </Modal>
@@ -333,6 +362,7 @@ const styles = StyleSheet.create({
   },
   photoLabel: { color: colors.muted, fontSize: 12 },
   fullPhoto: { flex: 1, resizeMode: "contain" },
+  fullPhotoActions: { padding: spacing.lg },
   top: {
     height: 68,
     paddingHorizontal: 16,
