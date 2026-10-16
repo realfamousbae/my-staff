@@ -178,6 +178,7 @@ function Shell() {
         onCatalog={() => setScreen("catalog")}
         onRetry={() => void layer.retry(selected.id)}
         onAttach={(uri: string) => layer.attachPhoto(selected.id, uri)}
+        onSetPrimary={(mediaId: string) => layer.setPrimaryPhoto(selected.id, mediaId)}
         onDelete={async () => {
           await layer.deleteItem(selected.id);
           setScreen("library");
@@ -189,6 +190,7 @@ function Shell() {
       <CatalogPickerScreen
         category={selected.category}
         currentId={selected.editionId}
+        initialQuery={selected.title || selected.editionName || ""}
         load={(query, category) => layer.searchCatalog(query, category)}
         onPick={async (editionId) => {
           await layer.linkEdition(selected.id, editionId);

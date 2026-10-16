@@ -83,6 +83,7 @@ export class CaptureCoordinator {
       version: null,
       recognitionStatus: "unassigned",
       artworkStatus: "pending",
+      primaryMediaId: null,
       captureState: "preparing",
       syncState: "local_only",
       deletedAt: null,

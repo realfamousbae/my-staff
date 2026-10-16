@@ -37,6 +37,7 @@ export interface LocalItem {
     | "outcome_unknown";
   artworkStatus:
     "pending" | "processing" | "ready" | "failed" | "outcome_unknown";
+  primaryMediaId: string | null;
   captureState: CaptureState;
   syncState: SyncState;
   deletedAt: string | null;

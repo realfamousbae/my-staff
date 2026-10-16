@@ -75,6 +75,7 @@ const item = (id: string, deletedAt: string | null = null): LocalItem => ({
   version: 1,
   recognitionStatus: "unassigned",
   artworkStatus: "pending",
+  primaryMediaId: null,
   captureState: "saved",
   syncState: "pending",
   deletedAt,

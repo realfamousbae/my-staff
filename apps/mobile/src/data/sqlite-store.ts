@@ -42,17 +42,17 @@ export class ExpoSqliteStore implements LocalStore {
       await this.db.execAsync(
         "ALTER TABLE items ADD COLUMN artwork_status TEXT NOT NULL DEFAULT 'pending'",
       );
+    if (!columns.some((column) => column.name === "primary_media_id"))
+      await this.db.execAsync(
+        "ALTER TABLE items ADD COLUMN primary_media_id TEXT",
+      );
   }
   async transaction<T>(work: () => Promise<T>): Promise<T> {
-    await this.db.execAsync("BEGIN IMMEDIATE");
-    try {
-      const value = await work();
-      await this.db.execAsync("COMMIT");
-      return value;
-    } catch (e) {
-      await this.db.execAsync("ROLLBACK");
-      throw e;
-    }
+    let result: T;
+    await this.db.withTransactionAsync(async () => {
+      result = await work();
+    });
+    return result!;
   }
   async getItem(id: string) {
     return this.mapItem(
@@ -71,7 +71,7 @@ export class ExpoSqliteStore implements LocalStore {
   }
   async putItem(x: LocalItem) {
     await this.db.runAsync(
-      `INSERT INTO items VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?) ON CONFLICT(id) DO UPDATE SET owner_id=excluded.owner_id,category=excluded.category,title=excluded.title,edition_name=excluded.edition_name,edition_id=excluded.edition_id,notes=excluded.notes,session_id=excluded.session_id,captured_at=excluded.captured_at,version=excluded.version,recognition_status=excluded.recognition_status,artwork_status=excluded.artwork_status,capture_state=excluded.capture_state,sync_state=excluded.sync_state,deleted_at=excluded.deleted_at,updated_at=excluded.updated_at`,
+      `INSERT INTO items VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?) ON CONFLICT(id) DO UPDATE SET owner_id=excluded.owner_id,category=excluded.category,title=excluded.title,edition_name=excluded.edition_name,edition_id=excluded.edition_id,notes=excluded.notes,session_id=excluded.session_id,captured_at=excluded.captured_at,version=excluded.version,recognition_status=excluded.recognition_status,artwork_status=excluded.artwork_status,primary_media_id=excluded.primary_media_id,capture_state=excluded.capture_state,sync_state=excluded.sync_state,deleted_at=excluded.deleted_at,updated_at=excluded.updated_at`,
       [
         x.id,
         x.ownerId,
@@ -85,6 +85,7 @@ export class ExpoSqliteStore implements LocalStore {
         x.version,
         x.recognitionStatus,
         x.artworkStatus,
+        x.primaryMediaId,
         x.captureState,
         x.syncState,
         x.deletedAt,
@@ -246,6 +247,7 @@ export class ExpoSqliteStore implements LocalStore {
           version: x.version,
           recognitionStatus: x.recognition_status,
           artworkStatus: x.artwork_status,
+          primaryMediaId: x.primary_media_id ?? null,
           captureState: x.capture_state,
           syncState: x.sync_state,
           deletedAt: x.deleted_at,

@@ -23,6 +23,9 @@ import type {
   LocalItem,
   LocalMedia,
 } from "./types";
+import { orderOriginals } from "./media-order";
+import { CATALOG_SEEDS, filterCatalogSeeds } from "./catalog-seeds";
+export { orderOriginals, CATALOG_SEEDS, filterCatalogSeeds };
 
 export type DataSnapshot = {
   ready: boolean;
@@ -61,7 +64,7 @@ async function sha256(bytes: Uint8Array) {
     value.toString(16).padStart(2, "0"),
   ).join("");
 }
-
+ 
 /** Native singleton used by screens. Records are emitted immediately from SQLite, never from network optimism. */
 export class DataLayer {
   private store: ExpoSqliteStore | null = null;
@@ -207,6 +210,22 @@ export class DataLayer {
     await this.emit();
     if (this.session) void this.syncAndEmit();
   }
+  async setPrimaryPhoto(itemId: string, mediaId: string) {
+    await this.initialize();
+    const store = this.requireStore();
+    const item = await store.getItem(itemId);
+    if (!item) throw new Error("Предмет не найден");
+    const media = await store.getMedia(mediaId);
+    if (!media || media.itemId !== itemId)
+      throw new Error("Фото не принадлежит этому предмету");
+    const changed = {
+      ...item,
+      primaryMediaId: mediaId,
+      updatedAt: this.runtime.now(),
+    };
+    await store.putItem(changed);
+    await this.emit();
+  }
   async updateItem(
     id: string,
     patch: Partial<
@@ -339,18 +358,23 @@ export class DataLayer {
   }
   async catalogEditions(): Promise<Edition[]> {
     await this.initialize();
-    if (!this.session) return [];
+    if (!this.session) return CATALOG_SEEDS;
     const api = new ApiClient(
       () => this.apiUrl,
       () => this.session?.token ?? null,
     );
-    return (
-      await api.request<{ editions: Edition[] }>("GET", "/v1/catalog/editions")
-    ).editions;
+    try {
+      const result = (
+        await api.request<{ editions: Edition[] }>("GET", "/v1/catalog/editions")
+      ).editions;
+      return result.length > 0 ? result : CATALOG_SEEDS;
+    } catch {
+      return CATALOG_SEEDS;
+    }
   }
   async searchCatalog(query = "", category?: Category): Promise<Edition[]> {
     await this.initialize();
-    if (!this.session) return [];
+    if (!this.session) return filterCatalogSeeds(query, category);
     const api = new ApiClient(
       () => this.apiUrl,
       () => this.session?.token ?? null,
@@ -358,47 +382,62 @@ export class DataLayer {
     const parameters = new URLSearchParams();
     if (query.trim()) parameters.set("q", query.trim());
     if (category) parameters.set("category", category);
-    return (
-      await api.request<{ editions: Edition[] }>(
-        "GET",
-        `/v1/catalog/editions${parameters.size ? `?${parameters}` : ""}`,
-      )
-    ).editions;
+    try {
+      const result = (
+        await api.request<{ editions: Edition[] }>(
+          "GET",
+          `/v1/catalog/editions${parameters.size ? `?${parameters}` : ""}`,
+        )
+      ).editions;
+      return result.length > 0 ? result : filterCatalogSeeds(query, category);
+    } catch {
+      return filterCatalogSeeds(query, category);
+    }
   }
   async chooseEdition(itemId: string, editionId: string | null) {
     await this.initialize();
     const store = this.requireStore();
     const item = await store.getItem(itemId);
-    if (!item?.ownerId || item.version === null)
-      throw new Error("Сначала синхронизируйте предмет");
-    const edition = editionId
-      ? (await this.catalogEditions()).find((x) => x.id === editionId)
+    if (!item) throw new Error("Предмет не найден");
+    const editions = await this.catalogEditions();
+    const edition = editionId ? editions.find((x) => x.id === editionId) : null;
+    const fullTitle = edition
+      ? (edition.brand ? `${edition.brand} ${edition.name}` : edition.name)
       : null;
     const changed = {
       ...item,
       editionId,
       editionName: edition?.name ?? null,
-      syncState: "pending" as const,
+      title: !item.title && fullTitle ? fullTitle : item.title,
+      notes: !item.notes && edition?.flavor ? `Вкус: ${edition.flavor}` : item.notes,
+      syncState: item.ownerId ? ("pending" as const) : item.syncState,
       updatedAt: this.runtime.now(),
     };
     await store.putItem(changed);
-    await store.putOperation({
-      id: this.runtime.id(),
-      ownerId: item.ownerId,
-      kind: "upsert_item",
-      itemId,
-      mediaId: null,
-      payload: {
-        create: false,
-        body: { expectedVersion: item.version, editionId },
-        base: { editionId: item.editionId },
-      },
-      attempts: 0,
-      nextAttemptAt: this.runtime.now(),
-      lastError: null,
-      createdAt: this.runtime.now(),
-      updatedAt: this.runtime.now(),
-    });
+    if (item.ownerId && item.version !== null) {
+      await store.putOperation({
+        id: this.runtime.id(),
+        ownerId: item.ownerId,
+        kind: "upsert_item",
+        itemId,
+        mediaId: null,
+        payload: {
+          create: false,
+          body: {
+            expectedVersion: item.version,
+            editionId,
+            ...(changed.title !== item.title ? { title: changed.title ?? "" } : {}),
+            ...(changed.notes !== item.notes ? { notes: changed.notes ?? "" } : {}),
+          },
+          base: { editionId: item.editionId },
+        },
+        attempts: 0,
+        nextAttemptAt: this.runtime.now(),
+        lastError: null,
+        createdAt: this.runtime.now(),
+        updatedAt: this.runtime.now(),
+      });
+    }
     await this.emit();
     if (this.session) void this.syncAndEmit();
   }
@@ -784,6 +823,7 @@ export class DataLayer {
         version: r.version,
         recognitionStatus: r.recognitionStatus,
         artworkStatus: r.artworkStatus,
+        primaryMediaId: local?.primaryMediaId ?? null,
         captureState: "saved",
         syncState: "synced",
         deletedAt: r.deletedAt,
@@ -896,8 +936,9 @@ export class DataLayer {
   }
   private async toUi(item: LocalItem): Promise<CollectionItem> {
     const media = await this.requireStore().listMediaForItem(item.id);
-    const originals = media.filter(
-      (x) => x.role === "original" || x.role === "detail",
+    const originals = orderOriginals(
+      media.filter((x) => x.role === "original" || x.role === "detail"),
+      item.primaryMediaId,
     );
     const artwork = media
       .filter((x) => x.role === "artwork" && x.localPath)
@@ -925,6 +966,10 @@ export class DataLayer {
         .slice(1)
         .map((x) => x.localPath)
         .filter((x): x is string => !!x),
+      photoMediaIds: originals
+        .filter((x) => !!x.localPath)
+        .map((x) => x.id),
+      primaryMediaId: item.primaryMediaId,
       addedAt: item.capturedAt,
       uploadStatus:
         item.syncState === "synced"

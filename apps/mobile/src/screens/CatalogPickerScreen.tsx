@@ -17,6 +17,7 @@ import { SafeAreaView } from "react-native-safe-area-context";
 export function CatalogPickerScreen({
   category,
   currentId,
+  initialQuery = "",
   load,
   onPick,
   onPropose,
@@ -24,12 +25,13 @@ export function CatalogPickerScreen({
 }: {
   category: CollectibleCategory;
   currentId?: string | null;
+  initialQuery?: string;
   load: (query: string, category: CollectibleCategory) => Promise<Edition[]>;
   onPick: (editionId: string | null) => Promise<void>;
   onPropose: () => void;
   onBack: () => void;
 }) {
-  const [query, setQuery] = useState("");
+  const [query, setQuery] = useState(initialQuery);
   const [items, setItems] = useState<Edition[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -47,8 +49,14 @@ export function CatalogPickerScreen({
     }
   };
   useEffect(() => {
-    void reload("");
-  }, [category]);
+    void reload(initialQuery);
+  }, [category, initialQuery]);
+
+  const quickTags =
+    category === "energy"
+      ? ["Red Bull", "Monster", "Adrenaline", "Burn", "Flash"]
+      : ["Original", "Sour Cream", "Paprika", "BBQ", "Cheese"];
+
   return (
     <SafeAreaView style={styles.page}>
       <View style={styles.top}>
@@ -66,21 +74,47 @@ export function CatalogPickerScreen({
           <TextInput
             accessibilityLabel="Поиск в каталоге"
             value={query}
-            onChangeText={setQuery}
+            onChangeText={(text) => {
+              setQuery(text);
+              void reload(text);
+            }}
             onSubmitEditing={() => void reload()}
             placeholder="Бренд, вкус или оформление"
             placeholderTextColor={colors.muted}
             style={styles.input}
             returnKeyType="search"
           />
+          {query.length > 0 && (
+            <IconButton
+              name="close-circle"
+              label="Очистить"
+              onPress={() => {
+                setQuery("");
+                void reload("");
+              }}
+            />
+          )}
         </View>
-        <Button label="Найти" tone="quiet" onPress={() => void reload()} />
+        <View style={styles.quickTags}>
+          {quickTags.map((tag) => (
+            <Pressable
+              key={tag}
+              onPress={() => {
+                setQuery(tag);
+                void reload(tag);
+              }}
+              style={styles.tag}
+            >
+              <Text style={styles.tagText}>{tag}</Text>
+            </Pressable>
+          ))}
+        </View>
         <View style={styles.current}>
           <Pill active>
             Текущий тип: {category === "energy" ? "энергетик" : "Pringles"}
           </Pill>
           <Button
-            label="Нет совпадения"
+            label="Без привязки"
             tone="quiet"
             onPress={() => void onPick(null)}
           />
@@ -224,4 +258,23 @@ const styles = StyleSheet.create({
     padding: 28,
   },
   bottom: { padding: 16, borderTopWidth: 1, borderColor: colors.line },
+  quickTags: {
+    flexDirection: "row",
+    flexWrap: "wrap",
+    gap: 8,
+    marginBottom: 6,
+  },
+  tag: {
+    paddingHorizontal: 11,
+    paddingVertical: 5,
+    borderRadius: 16,
+    backgroundColor: colors.surfaceRaised,
+    borderWidth: 1,
+    borderColor: colors.line,
+  },
+  tagText: {
+    color: colors.ink,
+    fontSize: 12,
+    fontWeight: "600",
+  },
 });

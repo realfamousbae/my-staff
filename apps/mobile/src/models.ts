@@ -21,6 +21,8 @@ export type CollectionItem = {
   notes?: string | null;
   photoUri?: string | null;
   additionalPhotoUris?: string[];
+  photoMediaIds?: string[];
+  primaryMediaId?: string | null;
   sessionId?: string | null;
   deletedAt?: string | null;
   addedAt: string;

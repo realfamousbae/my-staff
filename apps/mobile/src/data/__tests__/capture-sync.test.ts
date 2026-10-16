@@ -1,6 +1,7 @@
 import { describe, expect, it } from "vitest";
 import { CaptureCoordinator } from "../capture";
 import { SyncCoordinator } from "../sync";
+import { orderOriginals } from "../media-order";
 import type { FilePort, HttpPort, LocalStore, RuntimePort } from "../ports";
 import type {
   CaptureSession,
@@ -150,6 +151,7 @@ describe("capture coordinator", () => {
       version: null,
       recognitionStatus: "unassigned",
       artworkStatus: "pending",
+      primaryMediaId: null,
       captureState: "preparing",
       syncState: "local_only",
       deletedAt: null,
@@ -266,6 +268,7 @@ describe("capture coordinator", () => {
       version: 1,
       recognitionStatus: "unassigned",
       artworkStatus: "pending",
+      primaryMediaId: null,
       captureState: "saved",
       syncState: "synced",
       deletedAt: null,
@@ -328,6 +331,7 @@ describe("capture coordinator", () => {
       version: null,
       recognitionStatus: "unassigned",
       artworkStatus: "pending",
+      primaryMediaId: null,
       captureState: "preparing",
       syncState: "local_only",
       deletedAt: null,
@@ -400,6 +404,7 @@ describe("sync coordinator", () => {
       version: null,
       recognitionStatus: "unassigned",
       artworkStatus: "pending",
+      primaryMediaId: null,
       captureState: "saved",
       syncState: "pending",
       deletedAt: null,
@@ -499,6 +504,7 @@ describe("sync coordinator", () => {
       version: 1,
       recognitionStatus: "unassigned",
       artworkStatus: "pending",
+      primaryMediaId: null,
       captureState: "saved",
       syncState: "pending",
       deletedAt: null,
@@ -556,5 +562,44 @@ describe("sync coordinator", () => {
     await sync.run("owner", 1);
     expect(ids).toEqual([op.id, op.id]);
     expect((await store.getMedia(media.id))?.state).toBe("confirmed");
+  });
+
+  describe("primary photo selection", () => {
+    const makeMedia = (id: string, role: LocalMedia["role"] = "detail"): LocalMedia => ({
+      id,
+      itemId: "item-1",
+      ownerId: "owner",
+      role,
+      mimeType: "image/jpeg",
+      byteSize: 100,
+      sha256: "hash-" + id,
+      localPath: `/path/${id}.jpg`,
+      remoteId: null,
+      state: "local",
+      uploadUrl: null,
+      uploadHeaders: null,
+      lastError: null,
+      createdAt: "2026-09-01T00:00:00Z",
+      updatedAt: "2026-09-01T00:00:00Z",
+    });
+
+    it("keeps default order when primaryMediaId is null or matches first item", () => {
+      const mediaList = [makeMedia("m1", "original"), makeMedia("m2"), makeMedia("m3")];
+      expect(orderOriginals(mediaList, null).map((m) => m.id)).toEqual(["m1", "m2", "m3"]);
+      expect(orderOriginals(mediaList, "m1").map((m) => m.id)).toEqual(["m1", "m2", "m3"]);
+    });
+
+    it("moves the designated primary media to index 0", () => {
+      const mediaList = [makeMedia("m1", "original"), makeMedia("m2"), makeMedia("m3")];
+      const reordered = orderOriginals(mediaList, "m3");
+      expect(reordered.map((m) => m.id)).toEqual(["m3", "m1", "m2"]);
+    });
+
+    it("does not mutate the original array and ignores unknown media IDs", () => {
+      const mediaList = [makeMedia("m1", "original"), makeMedia("m2")];
+      const reordered = orderOriginals(mediaList, "unknown-id");
+      expect(reordered.map((m) => m.id)).toEqual(["m1", "m2"]);
+      expect(mediaList.map((m) => m.id)).toEqual(["m1", "m2"]);
+    });
   });
 });

@@ -24,6 +24,7 @@ export function ItemScreen({
   onCatalog,
   onRetry,
   onAttach,
+  onSetPrimary,
   onDelete,
 }: {
   item: CollectionItem;
@@ -32,6 +33,7 @@ export function ItemScreen({
   onCatalog: () => void;
   onRetry: () => void;
   onAttach: (uri: string) => Promise<void>;
+  onSetPrimary: (mediaId: string) => Promise<void>;
   onDelete: () => Promise<void>;
 }) {
   const animation = useRef(new Animated.Value(0)).current;
@@ -176,24 +178,48 @@ export function ItemScreen({
         <View style={styles.info}>
           <Text style={text.section}>Фото предмета · {photos.length}</Text>
           <ScrollView horizontal contentContainerStyle={styles.photos}>
-            {photos.map((uri, index) => (
-              <Pressable
-                key={uri}
-                accessibilityRole="button"
-                accessibilityLabel={
-                  index === 0
-                    ? "Открыть оригинальное фото"
-                    : `Открыть ракурс ${index}`
-                }
-                onPress={() => setViewedPhoto(uri)}
-                style={styles.photoTile}
-              >
-                <Image source={{ uri }} style={styles.photoThumbnail} />
-                <Text style={styles.photoLabel}>
-                  {index === 0 ? "Оригинал" : `Ракурс ${index}`}
-                </Text>
-              </Pressable>
-            ))}
+            {photos.map((uri, index) => {
+              const isPrimary = index === 0;
+              const mediaId = item.photoMediaIds?.[index];
+              return (
+                <Pressable
+                  key={uri}
+                  accessibilityRole="button"
+                  accessibilityLabel={
+                    isPrimary
+                      ? "Открыть основное фото"
+                      : `Открыть ракурс ${index}`
+                  }
+                  onPress={() => setViewedPhoto(uri)}
+                  onLongPress={() => {
+                    if (!isPrimary && mediaId) {
+                      Alert.alert(
+                        "Основной ракурс",
+                        "Сделать этот ракурс основным для карточки?",
+                        [
+                          { text: "Отмена", style: "cancel" },
+                          {
+                            text: "Сделать основным",
+                            onPress: () => void onSetPrimary(mediaId),
+                          },
+                        ],
+                      );
+                    }
+                  }}
+                  style={styles.photoTile}
+                >
+                  <Image source={{ uri }} style={styles.photoThumbnail} />
+                  <Text
+                    style={[
+                      styles.photoLabel,
+                      isPrimary && styles.photoLabelPrimary,
+                    ]}
+                  >
+                    {isPrimary ? "★ Основное" : `Ракурс ${index}`}
+                  </Text>
+                </Pressable>
+              );
+            })}
           </ScrollView>
           <Status tone={status[1]}>
             {item.artworkStatus === "processing"
@@ -204,10 +230,10 @@ export function ItemScreen({
             label={
               item.editionName
                 ? "Изменить издание каталога"
-                : "Связать с каталогом"
+                : "Подобрать в каталоге и заполнить"
             }
-            icon="albums-outline"
-            tone="quiet"
+            icon={item.editionName ? "albums-outline" : "search-outline"}
+            tone={item.editionName ? "quiet" : "lime"}
             onPress={onCatalog}
             disabled={attaching}
           />
@@ -221,8 +247,8 @@ export function ItemScreen({
             disabled={attaching}
           />
           <Text style={text.body}>
-            Дополнительные ракурсы доступны в галерее выше. На лицевой стороне
-            остаётся основное фото.
+            Дополнительные ракурсы доступны в галерее выше. Чтобы сделать ракурс
+            основным, зажмите его миниатюру или откройте на весь экран.
           </Text>
           <Text style={text.section}>Сведения</Text>
           <Fact
@@ -267,12 +293,36 @@ export function ItemScreen({
               label="Закрыть фото"
               onPress={() => setViewedPhoto(null)}
             />
-            <Text style={styles.topTitle}>Фото предмета</Text>
+            <Text style={styles.topTitle}>
+              {viewedPhoto && photos.indexOf(viewedPhoto) === 0
+                ? "Основной ракурс"
+                : "Фото предмета"}
+            </Text>
             <View style={{ width: 48 }} />
           </View>
           {viewedPhoto && (
             <Image source={{ uri: viewedPhoto }} style={styles.fullPhoto} />
           )}
+          {viewedPhoto && (() => {
+            const viewedIndex = photos.indexOf(viewedPhoto);
+            const isPrimary = viewedIndex === 0;
+            const mediaId = item.photoMediaIds?.[viewedIndex];
+            if (!isPrimary && mediaId) {
+              return (
+                <View style={styles.modalBottom}>
+                  <Button
+                    label="Использовать как основной ракурс"
+                    icon="star-outline"
+                    onPress={async () => {
+                      await onSetPrimary(mediaId);
+                      setViewedPhoto(null);
+                    }}
+                  />
+                </View>
+              );
+            }
+            return null;
+          })()}
         </SafeAreaView>
       </Modal>
     </SafeAreaView>
@@ -406,4 +456,6 @@ const styles = StyleSheet.create({
     textTransform: "uppercase",
   },
   factValue: { color: colors.ink, fontSize: 16, lineHeight: 22 },
+  photoLabelPrimary: { color: colors.lime, fontWeight: "700" },
+  modalBottom: { padding: 16, paddingBottom: 24 },
 });

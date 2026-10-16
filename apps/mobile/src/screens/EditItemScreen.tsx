@@ -3,6 +3,7 @@ import {
   KeyboardAvoidingView,
   Alert,
   Platform,
+  Pressable,
   ScrollView,
   StyleSheet,
   Text,
@@ -10,6 +11,7 @@ import {
   View,
 } from "react-native";
 import type { CollectibleCategory, CollectionItem } from "../models";
+import { filterCatalogSeeds } from "../data";
 import { colors, spacing, text } from "../theme";
 import { Button, IconButton, Pill } from "../ui";
 import { useBackAction } from "../useBackAction";
@@ -35,6 +37,12 @@ export function EditItemScreen({
   const [saving, setSaving] = useState(false);
   const busy = useRef(false);
   const insets = useSafeAreaInsets();
+
+  const searchQuery = (title.trim() || editionName.trim());
+  const suggestions =
+    searchQuery.length >= 2
+      ? filterCatalogSeeds(searchQuery, category).slice(0, 3)
+      : [];
   const close = () => {
     if (busy.current) return;
     if (
@@ -114,6 +122,39 @@ export function EditItemScreen({
           onChangeText={setEditionName}
           placeholder="Например, лимитированное оформление"
         />
+        {suggestions.length > 0 && (
+          <View style={styles.suggestionsBlock}>
+            <Text style={styles.suggestionsLabel}>
+              💡 Найдено в каталоге (нажмите для автозаполнения):
+            </Text>
+            {suggestions.map((s) => (
+              <Pressable
+                key={s.id}
+                onPress={() => {
+                  setTitle(s.brand ? `${s.brand} ${s.name}` : s.name);
+                  setEditionName(s.name);
+                  if (!notes && s.flavor) setNotes(`Вкус: ${s.flavor}`);
+                  setCategory(s.category);
+                }}
+                style={({ pressed }) => [
+                  styles.suggestionItem,
+                  pressed && styles.suggestionPressed,
+                ]}
+              >
+                <View style={styles.suggestionRow}>
+                  <Text style={styles.suggestionTitle}>
+                    {s.brand ? `${s.brand} ` : ""}
+                    {s.name}
+                  </Text>
+                  <Text style={styles.suggestionAction}>Выбрать</Text>
+                </View>
+                {s.flavor && (
+                  <Text style={styles.suggestionSub}>Вкус: {s.flavor}</Text>
+                )}
+              </Pressable>
+            ))}
+          </View>
+        )}
         <Text style={styles.fieldLabel}>Тип предмета</Text>
         <View style={styles.choices}>
           <Pill
@@ -223,5 +264,50 @@ const styles = StyleSheet.create({
     marginBottom: 24,
     borderWidth: 1,
     borderColor: colors.line,
+  },
+  suggestionsBlock: {
+    backgroundColor: colors.surface,
+    borderRadius: 16,
+    padding: 14,
+    gap: 10,
+    marginBottom: 20,
+    borderWidth: 1,
+    borderColor: colors.lime,
+  },
+  suggestionsLabel: {
+    color: colors.lime,
+    fontSize: 12,
+    fontWeight: "700",
+    letterSpacing: 0.3,
+  },
+  suggestionItem: {
+    backgroundColor: colors.surfaceRaised,
+    borderRadius: 12,
+    padding: 10,
+    gap: 3,
+  },
+  suggestionPressed: {
+    opacity: 0.75,
+  },
+  suggestionRow: {
+    flexDirection: "row",
+    justifyContent: "space-between",
+    alignItems: "center",
+  },
+  suggestionTitle: {
+    color: colors.ink,
+    fontSize: 15,
+    fontWeight: "700",
+    flex: 1,
+  },
+  suggestionAction: {
+    color: colors.lime,
+    fontSize: 13,
+    fontWeight: "700",
+    marginLeft: 8,
+  },
+  suggestionSub: {
+    color: colors.muted,
+    fontSize: 12,
   },
 });
